@@ -1464,7 +1464,8 @@ public class FormsLexer implements java_cup.runtime.Scanner {
           // fall through
           case 183: break;
           case 84:
-            { agregarToken(yytext(), "STAR"); return new Symbol(sym.STAR, yyline, yycolumn, yytext());
+            { if(stringBuffer.length() > 0){ String texto = stringBuffer.toString(); stringBuffer.setLength(0); agregarToken(texto, "TEXTO");}
+                agregarToken(yytext(), "STAR"); return new Symbol(sym.STAR, yyline, yycolumn, yytext());
             }
           // fall through
           case 184: break;
@@ -1494,8 +1495,7 @@ public class FormsLexer implements java_cup.runtime.Scanner {
           // fall through
           case 189: break;
           case 90:
-            { if(stringBuffer.length() > 0){ String texto = stringBuffer.toString(); stringBuffer.setLength(0); agregarToken(texto, "TEXTO");}
-                            agregarToken(yytext(), "MULTI_STAR_UNO"); return new Symbol(sym.MULTI_STAR_UNO, yyline, yycolumn, yytext());
+            { agregarToken(yytext(), "MULTI_STAR_UNO"); return new Symbol(sym.MULTI_STAR_UNO, yyline, yycolumn, yytext());
             }
           // fall through
           case 190: break;

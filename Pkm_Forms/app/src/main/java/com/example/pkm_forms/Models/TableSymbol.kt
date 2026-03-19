@@ -27,4 +27,14 @@ class TableSymbol(
 
         return tablaPrevia?.getVariableCompleto(id)
     }
+
+    fun updateVariable(id: String, newValue: Any): Boolean{
+        val key = id.lowercase()
+
+        if (tablaActual.containsKey(id)){
+            tablaActual[key]!!.value = newValue
+            return true
+        }
+        return tablaPrevia?.updateVariable(id, newValue) ?: false
+    }
 }
