@@ -67,6 +67,7 @@ public class sym {
   public static final int ELSE = 47;
   public static final int MULTIPLE_QUESTION = 45;
   public static final int CORRECT = 42;
+  public static final int MOSTRAR = 98;
   public static final int CONTENT = 38;
   public static final int EOF = 0;
   public static final int PUNTO = 71;
@@ -204,7 +205,8 @@ public class sym {
   "EMO_SAD",
   "EMO_SERIOUS",
   "EMO_HEART",
-  "EMO_CAT"
+  "EMO_CAT",
+  "MOSTRAR"
   };
 }
 

@@ -183,6 +183,7 @@ espacios = [ \t\n\r\f]+
 <YYINITIAL> FOR { agregarToken(yytext(), "FOR"); return new Symbol(sym.FOR, yyline, yycolumn, yytext());}
 <YYINITIAL> in { agregarToken(yytext(), "IN"); return new Symbol(sym.IN, yyline, yycolumn, yytext());}
 <YYINITIAL> {RANGO} { agregarToken(yytext(), "RANGO"); return new Symbol(sym.RANGO, yyline, yycolumn, yytext());}
+<YYINITIAL> MOSTRAR { agregarToken(yytext(), "MOSTRAR"); return new Symbol(sym.MOSTRAR, yyline, yycolumn, yytext());} //eliminar de ultimo
 
 //Operadores Aritmeticos
 <YYINITIAL> {SUMA} { agregarToken(yytext(), "SUMA"); return new Symbol(sym.SUMA, yyline, yycolumn, yytext());}
@@ -234,13 +235,14 @@ espacios = [ \t\n\r\f]+
 
 //Cierre de cadena de texto
 <CADENA> {COMILLA} {String contenido = stringBuffer.toString();
-                    if(!contenido.isEmpty()){agregarToken(contenido, "TEXTO"); yybegin(YYINITIAL); return new Symbol(sym.TEXTO, yyline, yycolumn, yytext());}
+                    if(!contenido.isEmpty()){agregarToken(contenido, "TEXTO"); yybegin(YYINITIAL); return new Symbol(sym.TEXTO, yyline, yycolumn, contenido);}
                     yybegin(YYINITIAL); return new Symbol(sym.TEXTO, yyline, yycolumn, "");}
 
 //emojis
+<CADENA> {STAR} { if(stringBuffer.length() > 0){ String texto = stringBuffer.toString(); stringBuffer.setLength(0); agregarToken(texto, "TEXTO");}
+                agregarToken(yytext(), "STAR"); return new Symbol(sym.STAR, yyline, yycolumn, yytext());}
 <CADENA> {MULTI_STAR_UNO} { agregarToken(yytext(), "MULTI_STAR_UNO"); return new Symbol(sym.MULTI_STAR_UNO, yyline, yycolumn, yytext());}
 <CADENA> {MULTI_STAR_DOS} { agregarToken(yytext(), "MULTI_STAR_DOS"); return new Symbol(sym.MULTI_STAR_DOS, yyline, yycolumn, yytext());}
-<CADENA> {STAR} { agregarToken(yytext(), "STAR"); return new Symbol(sym.STAR, yyline, yycolumn, yytext());}
 <CADENA> {SMILE} { agregarToken(yytext(), "SMILE"); return new Symbol(sym.SMILE, yyline, yycolumn, yytext());}
 <CADENA> {SAD} { agregarToken(yytext(), "SAD"); return new Symbol(sym.SAD, yyline, yycolumn, yytext());}
 <CADENA> {SERIOUS} { agregarToken(yytext(), "SERIOUS"); return new Symbol(sym.SERIOUS, yyline, yycolumn, yytext());}

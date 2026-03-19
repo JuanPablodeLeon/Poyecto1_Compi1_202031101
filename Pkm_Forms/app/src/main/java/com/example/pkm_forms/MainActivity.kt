@@ -62,10 +62,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun CompiLogicoApp(modifier: Modifier = Modifier) {
 
-    var inputText by remember { mutableStateOf("MOSTRAR 12 > 22" +
+    var inputText by remember { mutableStateOf("MOSTRAR \"12 > 22\" " +
             "\n number a = 12 + 8" +
             "\n number b = 2 + 5" +
-            "\n FOR a  + b") }
+            "\n MOSTRAR a  + b") }
     var consoleText by remember { mutableStateOf("Consola lista...\n") }
 
     Column(

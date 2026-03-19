@@ -20,4 +20,11 @@ class TableSymbol(
     fun getVariable(id: String): Symbol?{
         return tablaActual[id.lowercase()]
     }
+    fun getVariableCompleto(id: String): Symbol?{
+        val enActual = tablaActual[id.lowercase()]
+        if (enActual != null)
+            return enActual
+
+        return tablaPrevia?.getVariableCompleto(id)
+    }
 }
