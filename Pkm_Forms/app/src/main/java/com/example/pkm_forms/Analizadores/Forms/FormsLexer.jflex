@@ -1,7 +1,7 @@
 package com.example.pkm_forms.Analizadores.Forms;
 
 import java_cup.runtime.Symbol;
-import java.util.LinkedList;
+import java.util.*;
 import com.example.pkm_forms.Models.SintaxError;
 import com.example.pkm_forms.Models.Token;
 
@@ -16,9 +16,9 @@ import com.example.pkm_forms.Models.Token;
 %state CADENA
 
 %{
-    String cadena = "";
-
     public LinkedList<SintaxError> listaErrorLexico = new LinkedList<>();
+
+    private StringBuilder stringBuffer = new StringBuilder();
 
     public static LinkedList<Token> listaTokens = new LinkedList<>();
     private void agregarToken(String lexema, String tipo){
@@ -38,19 +38,9 @@ import com.example.pkm_forms.Models.Token;
 COMILLA = "\""
 ENTEROS = [0-9]+
 LETRAS = [a-zA-Z]+
+IDENTIFICADOR = ({LETRAS}|"_")+({LETRAS}|{ENTEROS}|"_")*
+//DEFINICION_ID = {IDENTIFICADOR}
 DECIMAL = {ENTEROS}"."{ENTEROS}
-EMO_SMILE = "@[:"(")")+"]"
-SMILE = "@[:smile:]"
-EMO_SAD = "@[:"("(")+"]"
-SAD = "@[:sad:]"
-EMO_SERIOUS = "@[:"("|")+"]"
-SERIOUS = "@[:serious:]"
-EMO_HEART = "@["("<")+("3")+"]"
-HEART = "@[:heart:]"
-STAR = "@[:star:]"
-MULTI_STAR = "@[:star"
-EMO_CAT = "@[:^^:]"
-CAT = "@[:cat:]"
 HEXADECIMAL = "#"[0-9A-F]{6}
 WHO_IS_THAT_POKEMON = "who_is_that_pokemon"
 COLOR = {COMILLA}"color"{COMILLA}
@@ -60,6 +50,20 @@ TEXT_SIZE = {COMILLA}"text size"{COMILLA}
 BORDER = {COMILLA}"border"{COMILLA}
 RANGO = ".."
 
+/* ---- EMOJIS ---- */
+EMO_SMILE = "@[:"(")")+"]"
+SMILE = "@[:smile:]"
+EMO_SAD = "@[:"("(")+"]"
+SAD = "@[:sad:]"
+EMO_SERIOUS = "@[:"("|")+"]"
+SERIOUS = "@[:serious:]"
+EMO_HEART = "@["("<")+("3")+"]"
+HEART = "@[:heart:]"
+STAR = "@[:star:]"
+MULTI_STAR_UNO = "@[:star:"{ENTEROS}"]"
+MULTI_STAR_DOS = "@[:star-"{ENTEROS}"]"
+EMO_CAT = "@[:^^:]"
+CAT = "@[:cat:]"
 /* ---- TOKENS ----*/
 
 //Operadores Aritmeticos
@@ -180,21 +184,6 @@ espacios = [ \t\n\r\f]+
 <YYINITIAL> in { agregarToken(yytext(), "IN"); return new Symbol(sym.IN, yyline, yycolumn, yytext());}
 <YYINITIAL> {RANGO} { agregarToken(yytext(), "RANGO"); return new Symbol(sym.RANGO, yyline, yycolumn, yytext());}
 
-
-//emojis
-<YYINITIAL> {EMO_SMILE} { agregarToken(yytext(), "EMO_SMILE"); return new Symbol(sym.EMO_SMILE, yyline, yycolumn, yytext());}
-<YYINITIAL> {SMILE} { agregarToken(yytext(), "SMILE"); return new Symbol(sym.SMILE, yyline, yycolumn, yytext());}
-<YYINITIAL> {EMO_SAD} { agregarToken(yytext(), "EMO_SAD"); return new Symbol(sym.EMO_SAD, yyline, yycolumn, yytext());}
-<YYINITIAL> {SAD} { agregarToken(yytext(), "SAD"); return new Symbol(sym.SAD, yyline, yycolumn, yytext());}
-<YYINITIAL> {EMO_SERIOUS} { agregarToken(yytext(), "EMO_SERIOUS"); return new Symbol(sym.EMO_SERIOUS, yyline, yycolumn, yytext());}
-<YYINITIAL> {SERIOUS} { agregarToken(yytext(), "SERIOUS"); return new Symbol(sym.SERIOUS, yyline, yycolumn, yytext());}
-<YYINITIAL> {EMO_HEART} { agregarToken(yytext(), "EMO_HEART"); return new Symbol(sym.EMO_HEART, yyline, yycolumn, yytext());}
-<YYINITIAL> {HEART} { agregarToken(yytext(), "HEART"); return new Symbol(sym.HEART, yyline, yycolumn, yytext());}
-<YYINITIAL> {STAR} { agregarToken(yytext(), "STAR"); return new Symbol(sym.STAR, yyline, yycolumn, yytext());}
-<YYINITIAL> {MULTI_STAR} { agregarToken(yytext(), "MULTI_STAR"); return new Symbol(sym.MULTI_STAR, yyline, yycolumn, yytext());}
-<YYINITIAL> {EMO_CAT} { agregarToken(yytext(), "EMO_CAT"); return new Symbol(sym.EMO_CAT, yyline, yycolumn, yytext());}
-<YYINITIAL> {CAT} { agregarToken(yytext(), "CAT"); return new Symbol(sym.CAT, yyline, yycolumn, yytext());}
-
 //Operadores Aritmeticos
 <YYINITIAL> {SUMA} { agregarToken(yytext(), "SUMA"); return new Symbol(sym.SUMA, yyline, yycolumn, yytext());}
 <YYINITIAL> {RESTA} { agregarToken(yytext(), "RESTA"); return new Symbol(sym.RESTA, yyline, yycolumn, yytext());}
@@ -228,7 +217,7 @@ espacios = [ \t\n\r\f]+
 <YYINITIAL> {RCORCHETE} { agregarToken(yytext(), "RCORCHETE"); return new Symbol(sym.RCORCHETE, yyline, yycolumn, yytext());}
 <YYINITIAL> {QUESTION_MARK} { agregarToken(yytext(), "QUESTION_MARK"); return new Symbol(sym.QUESTION_MARK, yyline, yycolumn, yytext());}
 <YYINITIAL> {DOS_PUNTOS} { agregarToken(yytext(), "DOS_PUNTOS"); return new Symbol(sym.DOS_PUNTOS, yyline, yycolumn, yytext());}
-<YYINITIAL> {COMILLA} { agregarToken(yytext(), "COMILLA"); return new Symbol(sym.COMILLA, yyline, yycolumn, yytext());}
+//<YYINITIAL> {COMILLA} { agregarToken(yytext(), "COMILLA"); return new Symbol(sym.COMILLA, yyline, yycolumn, yytext());}
 
 //Forma Hexadecimal
 <YYINITIAL> {HEXADECIMAL} { agregarToken(yytext(), "HEXADECIMAL"); return new Symbol(sym.HEXADECIMAL, yyline, yycolumn, yytext());}
@@ -238,8 +227,32 @@ espacios = [ \t\n\r\f]+
 <YYINITIAL> {DECIMAL} { agregarToken(yytext(), "DECIMAL"); return new Symbol(sym.DECIMAL, yyline, yycolumn, yytext());}
 
 //Letras
-<YYINITIAL> {LETRAS} { agregarToken(yytext(), "LETRAS"); return new Symbol(sym.LETRAS, yyline, yycolumn, yytext());}
+<YYINITIAL> {IDENTIFICADOR} { agregarToken(yytext(), "IDENTIFICADOR"); return new Symbol(sym.IDENTIFICADOR, yyline, yycolumn, yytext());}
 
+//<YYINITIAL> {DEFINICION_ID} { agregarToken(yytext(), "DEFINICION_ID"); return new Symbol(sym.DEFINICION_ID, yyline, yycolumn, yytext());}
+
+
+//Cierre de cadena de texto
+<CADENA> {COMILLA} {String contenido = stringBuffer.toString();
+                    if(!contenido.isEmpty()){agregarToken(contenido, "TEXTO"); yybegin(YYINITIAL); return new Symbol(sym.TEXTO, yyline, yycolumn, yytext());}
+                    yybegin(YYINITIAL); return new Symbol(sym.TEXTO, yyline, yycolumn, "");}
+
+//emojis
+<CADENA> {MULTI_STAR_UNO} { agregarToken(yytext(), "MULTI_STAR_UNO"); return new Symbol(sym.MULTI_STAR_UNO, yyline, yycolumn, yytext());}
+<CADENA> {MULTI_STAR_DOS} { agregarToken(yytext(), "MULTI_STAR_DOS"); return new Symbol(sym.MULTI_STAR_DOS, yyline, yycolumn, yytext());}
+<CADENA> {STAR} { agregarToken(yytext(), "STAR"); return new Symbol(sym.STAR, yyline, yycolumn, yytext());}
+<CADENA> {SMILE} { agregarToken(yytext(), "SMILE"); return new Symbol(sym.SMILE, yyline, yycolumn, yytext());}
+<CADENA> {SAD} { agregarToken(yytext(), "SAD"); return new Symbol(sym.SAD, yyline, yycolumn, yytext());}
+<CADENA> {SERIOUS} { agregarToken(yytext(), "SERIOUS"); return new Symbol(sym.SERIOUS, yyline, yycolumn, yytext());}
+<CADENA> {HEART} { agregarToken(yytext(), "HEART"); return new Symbol(sym.HEART, yyline, yycolumn, yytext());}
+<CADENA> {CAT} { agregarToken(yytext(), "CAT"); return new Symbol(sym.CAT, yyline, yycolumn, yytext());}
+<CADENA> {EMO_SMILE} { agregarToken(yytext(), "EMO_SMILE"); return new Symbol(sym.EMO_SMILE, yyline, yycolumn, yytext());}
+<CADENA> {EMO_SAD} { agregarToken(yytext(), "EMO_SAD"); return new Symbol(sym.EMO_SAD, yyline, yycolumn, yytext());}
+<CADENA> {EMO_SERIOUS} { agregarToken(yytext(), "EMO_SERIOUS"); return new Symbol(sym.EMO_SERIOUS, yyline, yycolumn, yytext());}
+<CADENA> {EMO_HEART} { agregarToken(yytext(), "EMO_HEART"); return new Symbol(sym.EMO_HEART, yyline, yycolumn, yytext());}
+<CADENA> {EMO_CAT} { agregarToken(yytext(), "EMO_CAT"); return new Symbol(sym.EMO_CAT, yyline, yycolumn, yytext());}
+
+<CADENA> [^\"\@]+ { stringBuffer.append(yytext());}
 
 //Error Lexico
 <YYINITIAL> . { agregarToken(yytext(), "ERROR"); listaErrorLexico.add(new SintaxError("LEXICO", "Simbolo: "+ yytext()+" no existente en el lenguaje", yyline, yycolumn));}

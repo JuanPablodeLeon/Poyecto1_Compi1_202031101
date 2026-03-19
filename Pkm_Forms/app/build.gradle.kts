@@ -40,6 +40,8 @@ android {
 }
 
 dependencies {
+    compileOnly("com.github.vbmacher:java-cup:11b-20160615")
+    runtimeOnly("com.github.vbmacher:java-cup:11b-20160615")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
