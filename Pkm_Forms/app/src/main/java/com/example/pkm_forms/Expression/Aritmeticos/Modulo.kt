@@ -39,7 +39,7 @@ class Modulo (
                     TypeData.DECIMAL ->{
                         this.typeValue = Type(TypeData.DECIMAL)
                         if (leftValue is Number && rightValue is Number){
-                            return  (leftValue as Number).toDouble() % (rightValue as Number).toDouble()
+                            return  (leftValue as Int).toDouble() % (rightValue as Number).toDouble()
                         } else {
                             return SintaxError("SINTACTICO","No se puede sacar modulo de valores no numericos", this.line, this.column)
                         }
@@ -56,7 +56,7 @@ class Modulo (
                 when (rightType){
                     TypeData.INTEGER ->{
                         this.typeValue = Type(TypeData.DECIMAL)
-                        return (leftValue as Double) % (rightValue as Double)
+                        return (leftValue as Double) % (rightValue as Int).toDouble()
                     }
                     TypeData.DECIMAL ->{
                         this.typeValue = Type(TypeData.DECIMAL)

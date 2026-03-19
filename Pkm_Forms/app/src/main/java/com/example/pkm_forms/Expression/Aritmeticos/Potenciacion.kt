@@ -42,8 +42,8 @@ class Potenciacion (
                     TypeData.DECIMAL ->{
                         this.typeValue = Type(TypeData.DECIMAL)
                         if (leftValue is Number && rightValue is Number){
-                            val base = (leftValue as Number).toDouble()
-                            val exponente = (rightValue as Number).toDouble()
+                            val base = (leftValue as Int).toDouble()
+                            val exponente = (rightValue as Double)
                             return base.pow(exponente)
                         } else {
                             return SintaxError("SINTACTICO","No se puede potenciar valores no numericos", this.line, this.column)
@@ -61,8 +61,8 @@ class Potenciacion (
                 when (rightType){
                     TypeData.INTEGER ->{
                         this.typeValue = Type(TypeData.DECIMAL)
-                        val base = (leftValue as Int).toDouble()
-                        val exponente = rightValue as Double
+                        val base = (leftValue as Double)
+                        val exponente = (rightValue as Int).toDouble()
                         return base.pow(exponente)
                     }
                     TypeData.DECIMAL ->{
