@@ -22,6 +22,8 @@ import com.example.pkm_forms.Expression.Logicos.OR;
 import com.example.pkm_forms.Expression.Native;
 import com.example.pkm_forms.Instruction.Variable.*;
 import com.example.pkm_forms.Instruction.Print;
+import com.example.pkm_forms.Instruction.Colores.HSL;
+import com.example.pkm_forms.Instruction.Colores.RGB;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -90,6 +92,7 @@ nonterminal Instruction valores_variables, guardado_texto, extra_print;
 nonterminal Instruction asignacion_variables;
 nonterminal Instruction expresion_logica;
 nonterminal Instruction expresion_and, expresion_or;
+nonterminal Instruction tipos_color, codigo_rgb, codigo_hsl;
 
 precedence left OR, AND;
 precedence left IGUALDAD, DIFERENTE;
@@ -128,8 +131,28 @@ print ::= MOSTRAR extra_print:a {: RESULT = a; :} //eliminar al terminar o modif
           ;
 extra_print ::= expresion_logica:a {: RESULT = new Print(a, aleft, aright); :}
               | guardado_texto:a {: RESULT = new Print(a, aleft, aright); :}
+              | tipos_color :a {: RESULT = new Print(a, aleft, aright); :}
               ;
 
+/* -------------------------------------------------------------- COLORES --------------------------------------------------------------------------*/
+tipos_color ::= codigo_hsl:a {: RESULT = a; :}
+              | codigo_rgb:a {: RESULT = a; :}
+              | HEXADECIMAL:a {: RESULT = new Native(a, new Type(TypeData.COLOR), aleft, aright); :}
+              | RED:a {: RESULT = new Native(a, new Type(TypeData.COLOR), aleft, aright); :}
+              | BLUE:a {: RESULT = new Native(a, new Type(TypeData.COLOR), aleft, aright); :}
+              | GREEN:a {: RESULT = new Native(a, new Type(TypeData.COLOR), aleft, aright); :}
+              | PURPLE:a {: RESULT = new Native(a, new Type(TypeData.COLOR), aleft, aright); :}
+              | SKY:a {: RESULT = new Native(a, new Type(TypeData.COLOR), aleft, aright); :}
+              | YELLOW:a {: RESULT = new Native(a, new Type(TypeData.COLOR), aleft, aright); :}
+              | BLACK:a {: RESULT = new Native(a, new Type(TypeData.COLOR), aleft, aright); :}
+              | WHITE:a {: RESULT = new Native(a, new Type(TypeData.COLOR), aleft, aright); :}
+              ;
+codigo_rgb ::= LPAREN expresion_math:a COMA expresion_math:b COMA expresion_math:c RPAREN {: RESULT = new RGB(a, b, c, aleft, aright); :}
+               ;
+codigo_hsl ::= MENOR_QUE expresion_math:a COMA expresion_math:b COMA expresion_math:c MAYOR_QUE {: RESULT = new HSL(a, b, c, aleft, aright); :}
+               ;
+
+/* ---------------------------------------------------------- Operaciones Logicas  ---------------------------------------------------------- */
 expresion_logica ::= NOT expresion_comparacion:a {: RESULT = new Negacion(a, aleft, aright); :} %prec NOT
                    | expresion_and:a {: RESULT = a; :}
                    | expresion_or:a {: RESULT = a; :}
