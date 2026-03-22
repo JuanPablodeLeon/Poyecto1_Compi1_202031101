@@ -19,11 +19,13 @@ import com.example.pkm_forms.Expression.Comparacion.Mayor_Que;
 import com.example.pkm_forms.Expression.Logicos.And;
 import com.example.pkm_forms.Expression.Logicos.Negacion;
 import com.example.pkm_forms.Expression.Logicos.OR;
+import com.example.pkm_forms.Expression.Atributos.TextoInstruction;
 import com.example.pkm_forms.Expression.Native;
 import com.example.pkm_forms.Instruction.Variable.*;
 import com.example.pkm_forms.Instruction.Print;
 import com.example.pkm_forms.Instruction.Colores.HSL;
 import com.example.pkm_forms.Instruction.Colores.RGB;
+import com.example.pkm_forms.Instruction.Elementos.TextoAtributos;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -94,6 +96,7 @@ nonterminal Instruction expresion_logica;
 nonterminal Instruction expresion_and, expresion_or;
 nonterminal Instruction tipos_color, codigo_rgb, codigo_hsl;
 nonterminal Instruction texto_elementos;
+nonterminal TextoAtributos
 
 precedence left OR, AND;
 precedence left IGUALDAD, DIFERENTE;
@@ -135,7 +138,14 @@ extra_print ::= expresion_logica:a {: RESULT = new Print(a, aleft, aright); :}
               | tipos_color :a {: RESULT = new Print(a, aleft, aright); :}
               ;
 
-texto_elementos ::= TEXT LLAVE texto_atributos:a RLLAVE {::}
+
+texto_elementos ::= TEXT LLAVE texto_atributos:a RLLAVE {:
+                    if(!a.tieneContent){
+                        listErrorSintactico.add(new SintaxError("SEMANTICO", "Faltante atributo obligatorio \" content \" ", a.left, a.right));
+                    } else{
+                        RESULT = new TextoInstruction(a, aleft, aright);
+                    }
+                    :}
                     ;
 
 /* -------------------------------------------------------------- COLORES --------------------------------------------------------------------------*/
