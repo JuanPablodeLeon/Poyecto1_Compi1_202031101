@@ -93,6 +93,7 @@ nonterminal Instruction asignacion_variables;
 nonterminal Instruction expresion_logica;
 nonterminal Instruction expresion_and, expresion_or;
 nonterminal Instruction tipos_color, codigo_rgb, codigo_hsl;
+nonterminal Instruction texto_elementos;
 
 precedence left OR, AND;
 precedence left IGUALDAD, DIFERENTE;
@@ -133,6 +134,9 @@ extra_print ::= expresion_logica:a {: RESULT = new Print(a, aleft, aright); :}
               | guardado_texto:a {: RESULT = new Print(a, aleft, aright); :}
               | tipos_color :a {: RESULT = new Print(a, aleft, aright); :}
               ;
+
+texto_elementos ::= TEXT LLAVE texto_atributos:a RLLAVE {::}
+                    ;
 
 /* -------------------------------------------------------------- COLORES --------------------------------------------------------------------------*/
 tipos_color ::= codigo_hsl:a {: RESULT = a; :}

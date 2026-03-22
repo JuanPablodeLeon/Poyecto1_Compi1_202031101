@@ -33,50 +33,50 @@ class HSL (
 
         var hueTpye = when(hue.typeValue.typeData){
             TypeData.INTEGER ->{
-                (hueValue as Int).coerceIn(0,255)
+                (hueValue as Int).coerceIn(0,360)
             }
 
             TypeData.DECIMAL ->{
                 this.typeValue = Type(TypeData.INTEGER)
                 val conversion : Int = (hueValue as Double).toInt()
-                return conversion.coerceIn(0,255)
+                conversion.coerceIn(0,360)
             }
             else -> {
-                return SintaxError("SEMANTICO", "Color Hue no valido", this.line, this.column)
+                return SintaxError("SEMANTICO", "Tono no valido", this.line, this.column)
             }
         }
 
         var saturationTpye = when(saturation.typeValue.typeData){
             TypeData.INTEGER ->{
-                (saturationValue as Int).coerceIn(0,255)
+                (saturationValue as Int).coerceIn(0,100)
             }
 
             TypeData.DECIMAL ->{
                 this.typeValue = Type(TypeData.INTEGER)
                 val conversion : Int = (saturationValue as Double).toInt()
-                return conversion.coerceIn(0,255)
+                conversion.coerceIn(0,100)
             }
             else -> {
-                return SintaxError("SEMANTICO", "Saturacion no valido", this.line, this.column)
+                return SintaxError("SEMANTICO", "Saturacion no valida", this.line, this.column)
             }
         }
 
         var lightnessType = when(lightness.typeValue.typeData){
             TypeData.INTEGER ->{
-                (lightnessValue as Int).coerceIn(0,255)
+                (lightnessValue as Int).coerceIn(0,100)
             }
 
             TypeData.DECIMAL ->{
                 this.typeValue = Type(TypeData.INTEGER)
                 val conversion : Int = (lightnessValue as Double).toInt()
-                return conversion.coerceIn(0,255)
+                conversion.coerceIn(0,100)
             }
             else -> {
-                return SintaxError("SEMANTICO", "Lightness no valido", this.line, this.column)
+                return SintaxError("SEMANTICO", "Brillo no valido", this.line, this.column)
             }
         }
 
         this.typeValue = Type(TypeData.COLOR)
-        return Triple(hue, saturation, lightness)
+        return Triple(hueTpye, saturationTpye, lightnessType)
     }
 }

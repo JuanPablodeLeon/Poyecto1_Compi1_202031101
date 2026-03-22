@@ -31,7 +31,7 @@ class RGB(
         if (blueValue is Error)
             return blueValue
 
-        var redTpye = when(red.typeValue.typeData){
+        val redTpye = when(red.typeValue.typeData){
             TypeData.INTEGER ->{
                 (redValue as Int).coerceIn(0,255)
             }
@@ -39,14 +39,14 @@ class RGB(
             TypeData.DECIMAL ->{
                 this.typeValue = Type(TypeData.INTEGER)
                 val conversion : Int = (redValue as Double).toInt()
-                return conversion.coerceIn(0,255)
+                conversion.coerceIn(0,255)
             }
             else -> {
                 return SintaxError("SEMANTICO", "Color rojo no valido", this.line, this.column)
             }
         }
 
-        var greenTpye = when(green.typeValue.typeData){
+        val greenTpye = when(green.typeValue.typeData){
             TypeData.INTEGER ->{
                 (greenValue as Int).coerceIn(0,255)
             }
@@ -54,14 +54,14 @@ class RGB(
             TypeData.DECIMAL ->{
                 this.typeValue = Type(TypeData.INTEGER)
                 val conversion : Int = (greenValue as Double).toInt()
-                return conversion.coerceIn(0,255)
+                conversion.coerceIn(0,255)
             }
             else -> {
                 return SintaxError("SEMANTICO", "Color verde no valido", this.line, this.column)
             }
         }
 
-        var blueTpye = when(blue.typeValue.typeData){
+        val blueTpye = when(blue.typeValue.typeData){
             TypeData.INTEGER ->{
                 (blueValue as Int).coerceIn(0,255)
             }
@@ -69,7 +69,7 @@ class RGB(
             TypeData.DECIMAL ->{
                 this.typeValue = Type(TypeData.INTEGER)
                 val conversion : Int = (blueValue as Double).toInt()
-                return conversion.coerceIn(0,255)
+                conversion.coerceIn(0,255)
             }
             else -> {
                 return SintaxError("SEMANTICO", "Color azul no valido", this.line, this.column)
@@ -77,6 +77,6 @@ class RGB(
         }
 
         this.typeValue = Type(TypeData.COLOR)
-        return Triple(red, green, blue)
+        return Triple(redTpye, greenTpye, blueTpye)
     }
 }
