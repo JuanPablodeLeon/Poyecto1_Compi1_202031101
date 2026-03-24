@@ -22,13 +22,22 @@ import com.example.pkm_forms.Expression.Logicos.And;
 import com.example.pkm_forms.Expression.Logicos.Negacion;
 import com.example.pkm_forms.Expression.Logicos.OR;
 import com.example.pkm_forms.Expression.Atributos.TextoInstruction;
+import com.example.pkm_forms.Expression.Atributos.SectionInstruction;
+import com.example.pkm_forms.Expression.Atributos.TableInstruction;
 import com.example.pkm_forms.Expression.Native;
+import com.example.pkm_forms.Expression.Ciclos.If;
+import com.example.pkm_forms.Expression.Ciclos.IfElse;
+import com.example.pkm_forms.Expression.Ciclos.IfElseIF;
 import com.example.pkm_forms.Instruction.Variable.*;
 import com.example.pkm_forms.Instruction.Print;
 import com.example.pkm_forms.Instruction.Colores.HSL;
 import com.example.pkm_forms.Instruction.Colores.RGB;
+import com.example.pkm_forms.Instruction.Elementos.SectionElementos;
+import com.example.pkm_forms.Instruction.Elementos.SectionAtributos;
 import com.example.pkm_forms.Instruction.Elementos.TextoAtributos;
 import com.example.pkm_forms.Instruction.Elementos.TextoElementos;
+import com.example.pkm_forms.Instruction.Elementos.TableAtributos;
+import com.example.pkm_forms.Instruction.Elementos.TableElementos;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -88,7 +97,8 @@ terminal SMILE, SAD, SERIOUS, HEART, CAT;
 terminal EMO_SMILE, EMO_SAD, EMO_SERIOUS, EMO_HEART, EMO_CAT;
 terminal MOSTRAR; //eliminar al terminar
 
-nonterminal LinkedList<Instruction> initiation, instructions;
+nonterminal LinkedList<Instruction> initiation, instructions, instruccione_if, instruccion_if;
+nonterminal LinkedList<Instruction> lista_elements, lista_elements_items;
 nonterminal Instruction instruction, print;
 nonterminal Instruction valores_variable, declaration;
 nonterminal Instruction expresion_math, expresion_math_1, expresion_math_2, expresion_math_3;
@@ -98,10 +108,13 @@ nonterminal Instruction asignacion_variables;
 nonterminal Instruction expresion_logica;
 nonterminal Instruction expresion_and, expresion_or;
 nonterminal Instruction tipos_color, codigo_rgb, codigo_hsl;
-nonterminal Instruction texto_elementos;
-nonterminal Instruction tipos_fonts, tipos_linea;
+nonterminal Instruction texto_elementos, section_elementos;
+nonterminal Instruction tipos_fonts, tipos_linea, orientation_atributos;
+nonterminal Instruction ciclo_if, table_elementos;
+nonterminal SectionAtributos section_atributos, section_atributo;
 nonterminal TextoAtributos texto_atributos, texto_atributo;
-nonterminal StylesGeneral styles_bloque, styles_atributos, styles_atributo;
+nonterminal TableAtributos table_atributos, table_atributo;
+nonterminal StylesGeneral  styles_bloque, styles_atributos, styles_atributo;
 
 precedence left OR, AND;
 precedence left IGUALDAD, DIFERENTE;
@@ -123,9 +136,11 @@ instructions ::= instructions:a instruction:b {: RESULT = a; RESULT.add(b); :}
                 ;
 
 instruction ::= print:a {: RESULT = a; :}
+                | ciclo_if:a {: RESULT = a; :}
                 | declaration:a {: RESULT = a; :}
                 | asignacion_variables:a {: RESULT = a; :}
                 | texto_elementos:a {: RESULT = a; :}//quitar cuando este section o if
+                | section_elementos:a {: RESULT = a;:}
                 ;
 
 declaration ::= NUMBER IDENTIFICADOR:a IGUAL expresion_math:b {: RESULT = new Declaration((String) a, b, aleft, aright); :}
@@ -142,16 +157,177 @@ print ::= MOSTRAR extra_print:a {: RESULT = a; :} //eliminar al terminar o modif
 extra_print ::= expresion_logica:a {: RESULT = new Print(a, aleft, aright); :}
               | guardado_texto:a {: RESULT = new Print(a, aleft, aright); :}
               | texto_elementos:a {: RESULT = new Print(a, aleft, aright); :}
+              | section_elementos:a {: RESULT = new Print(a, aleft, aright); :}
+              | tipos_color:a {: RESULT = new Print(a, aleft, aright); :}
               ;
 
+/* --------------------------------------------------------------------------- IF ------------------------------------------------------------------ */
+ciclo_if ::= IF LPAREN expresion_logica:a RPAREN LCORCHETE instruccione_if:b RCORCHETE {: RESULT = new If(a, b, aleft, aright); :} //no muestra contenido
+           | IF LPAREN expresion_logica:a RPAREN LCORCHETE instruccione_if:b RCORCHETE ELSE ciclo_if:c {: RESULT = new IfElseIF(a,b,c, aleft, aright); :}
+           | IF LPAREN expresion_logica:a RPAREN LCORCHETE instruccione_if:b RCORCHETE ELSE LCORCHETE instruccione_if:c RCORCHETE {: RESULT = new IfElse(a,b,c, aleft, aright); :}
+            ;
+instruccione_if ::= instruccion_if:a {: RESULT = a; :}
+                  | {:RESULT = null; :}
+                  ;
+instruccion_if ::= instruccion_if:a instruction:b {: RESULT = a; RESULT.add(b); :}
+                 | instruction:a {: RESULT = new LinkedList<Instruction>(); RESULT.add(a); :}
+                 ;
 
+/* --------------------------------------------------------------- SECTION --------------------------------------------------------------------------*/
+section_elementos ::= SECTION LLLAVE section_atributos:a RLLAVE {: RESULT = new SectionInstruction(a, aleft, aright); :}
+                    ;
+section_atributos::= section_atributos:a COMA section_atributo:b {:
+                        if(b.tieneWith){
+                            if(a.tieneWith){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tieneWith = true; a.with = b.with;
+                            }
+                        }
+                        if(b.tieneHeight){
+                            if(a.tieneHeight){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tieneHeight = true; a.height = b.height;
+                            }
+                        }
+                        if(b.tienePointX){
+                            if(a.tienePointX){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tienePointX = true; a.pointX = b.pointX;
+                            }
+                        }
+                        if(b.tienePointY){
+                            if(a.tienePointY){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tienePointY = true; a.pointY = b.pointY;
+                            }
+                        }
+                        if(b.tieneOrientation){
+                            if(a.tieneOrientation){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tieneOrientation = true; a.orientation = b.orientation;
+                            }
+                        }
+                        if(b.tieneElements){
+                            if(a.tieneElements){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tieneElements = true; a.elements = b.elements;
+                            }
+                        }
+                        if(b.tieneStyles){
+                            if(a.tieneStyles){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tieneStyles = true; a.styles = b.styles;
+                            }
+                        }
+                        RESULT = a; :}
+                   | section_atributo:a {: RESULT = a; :}
+                   ;
+section_atributo ::= WIDTH DOS_PUNTOS expresion_math:a {: RESULT = new SectionAtributos(); RESULT.tieneWith = true; RESULT.with = a; :}
+                   | HEIGHT DOS_PUNTOS expresion_math:a {: RESULT = new SectionAtributos(); RESULT.tieneHeight = true; RESULT.height = a; :}
+                   | POINTX DOS_PUNTOS expresion_math:a {: RESULT = new SectionAtributos(); RESULT.tienePointX = true; RESULT.pointX = a; :}
+                   | POINTY DOS_PUNTOS expresion_math:a {: RESULT = new SectionAtributos(); RESULT.tienePointY = true; RESULT.pointY = a; :}
+                   | ORIENTATION DOS_PUNTOS orientation_atributos:a {: RESULT = new SectionAtributos(); RESULT.tieneOrientation = true; RESULT.orientation = a; :}
+                   | ELEMENTS DOS_PUNTOS LCORCHETE lista_elements:a RCORCHETE {: RESULT = new SectionAtributos(); RESULT.tieneElements = true; RESULT.elements = a; :}
+                   | ELEMENTS DOS_PUNTOS LCORCHETE RCORCHETE {: RESULT = new SectionAtributos(); RESULT.tieneElements = true; RESULT.elements = new LinkedList<Instruction>(); :}
+                   | styles_bloque:a {: RESULT = new SectionAtributos(); RESULT.tieneStyles = true; RESULT.styles = a; :}
+                   | texto_elementos:a {: RESULT = new SectionAtributos(); :}
+                   ;
+orientation_atributos ::= VERTICAL:a {: RESULT = new Native(a, new Type(TypeData.ORIENTATION), aleft, aright); :}
+                        | HORIZONTAL:a {: RESULT = new Native(a, new Type(TypeData.ORIENTATION), aleft, aright); :}
+                        ;
+lista_elements ::= lista_elements:a COMA lista_elements_items:b {: RESULT = a; RESULT.addAll(b); :}
+                 | lista_elements_items:a {: RESULT = a; :}
+                 ;
+lista_elements_items ::= table_elementos:a {: RESULT = new LinkedList<Instruction>(); RESULT.add(a); :}
+                       | section_elementos:a {: RESULT = new LinkedList<Instruction>(); RESULT.add(a); :}
+                       | texto_elementos:a {: RESULT = new LinkedList<Instruction>(); RESULT.add(a); :}
+                       ;
+
+/* --------------------------------------------------------------- TABLES ---------------------------------------------------------------------------- */
+table_elementos ::= TABLE LLLAVE table_atributos:a RLLAVE {: RESULT = new TableInstruction(a, aleft, aright); :}
+                ;
+table_atributos ::= table_atributos:a COMA table_atributo:b {:
+                        if(b.tieneWidth){
+                            if(a.tieneWidth){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tieneWidth = true; a.width = b.width;
+                            }
+                        }
+                        if(b.tieneHeight){
+                            if(a.tieneHeight){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tieneHeight = true; a.height = b.height;
+                            }
+                        }
+                        if(b.tienePointX){
+                            if(a.tienePointX){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tienePointX = true; a.pointX = b.pointX;
+                            }
+                        }
+                        if(b.tienePointY){
+                            if(a.tienePointY){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tienePointY = true; a.pointY = b.pointY;
+                            }
+                        }
+                        if(b.tieneElements){
+                            if(a.tieneElements){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tieneElements = true; a.elements = b.elements;
+                            }
+                        }
+                        if(b.tieneStyles){
+                            if(a.tieneStyles){
+                                //agregar error a la lista de SintaxError
+                                //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
+                            } else{
+                                a.tieneStyles = true; a.styles = b.styles;
+                            }
+                        }
+                        RESULT = a; :}
+                  | table_atributo:a {: RESULT = a; :}
+                  ;
+table_atributo ::= WIDTH DOS_PUNTOS expresion_math:a {: RESULT = new TableAtributos(); RESULT.tieneWidth = true; RESULT.width = a; :}
+                 | HEIGHT DOS_PUNTOS expresion_math:a {: RESULT = new TableAtributos(); RESULT.tieneHeight = true; RESULT.height = a; :}
+                 | POINTX DOS_PUNTOS expresion_math:a {: RESULT = new TableAtributos(); RESULT.tienePointX = true; RESULT.pointX = a; :}
+                 | POINTY DOS_PUNTOS expresion_math:a {: RESULT = new TableAtributos(); RESULT.tienePointY = true; RESULT.pointY = a; :}
+                 | ELEMENTS DOS_PUNTOS guardado_texto:a {: RESULT = new TableAtributos(); RESULT.tieneElements = true; RESULT.elements = a; :}
+                 | styles_bloque:a {: RESULT = new TableAtributos(); RESULT.tieneStyles = true; RESULT.styles = a; :}
+                 | texto_elementos:a {: RESULT = new TableAtributos(); :}
+                 ;
+
+/* --------------------------------------------------------------- TEXT --------------------------------------------------------------------------*/
 texto_elementos ::= TEXT LLLAVE texto_atributos:a RLLAVE {: RESULT = new TextoInstruction(a, aleft, aright); :}
                     ;
-
-
 texto_atributos ::= texto_atributos:a COMA texto_atributo:b {:
                         if(b.tieneWidth){
                             if(a.tieneWidth){
+                            //agregar error a la lista de SintaxError
                                 //listErrorSintactico.add(new SintaxError("SINTACTICO", " elemento \"Width\" repetido", s.left, s.right));
                             } else{
                                 a.tieneWidth = true; a.width = b.width;
@@ -185,12 +361,13 @@ texto_atributos ::= texto_atributos:a COMA texto_atributo:b {:
 texto_atributo ::= WIDTH DOS_PUNTOS expresion_math:a {: RESULT = new TextoAtributos(); RESULT.tieneWidth = true; RESULT.width = a; :}
                   | HEIGHT DOS_PUNTOS expresion_math:a {: RESULT = new TextoAtributos(); RESULT.tieneHeight = true; RESULT.height = a; :}
                   | CONTENT DOS_PUNTOS guardado_texto:a {: RESULT = new TextoAtributos(); RESULT.tieneContent = true; RESULT.content = a; :}
-                  |  styles_bloque:a {: RESULT = new TextoAtributos(); RESULT.tieneStyles = true; RESULT.styles = a; :}
+                  | styles_bloque:a {: RESULT = new TextoAtributos(); RESULT.tieneStyles = true; RESULT.styles = a; :}
                   ;
 
+/* ----------------------------------------------------------------------- STYLES ----------------------------------------------------------------------- */
 styles_bloque ::= STYLES LLLAVE styles_atributos:a RLLAVE {: RESULT = a; :}
                     ;
-styles_atributos ::= styles_atributo:a COMA styles_atributo:b {:
+styles_atributos ::= styles_atributos:a COMA styles_atributo:b {:
                         if(b.tieneColor) { a.tieneColor = true; a.color = b.color; }
                         if(b.tieneBackgroundColor) { a.tieneBackgroundColor = true; a.backgroundColor = b.backgroundColor; }
                         if(b.tieneFontFamily){ a.tieneFontFamily = true; a.fontFamily = b.fontFamily;}
@@ -200,17 +377,20 @@ styles_atributos ::= styles_atributo:a COMA styles_atributo:b {:
                         :}
                    | styles_atributo:a {: RESULT = a; :}
                    ;
-styles_atributo ::= COLOR tipos_color:a {: RESULT = new StylesGeneral(); RESULT.tieneColor = true; RESULT.color = a; :}
-                   | BACKGROUND_COLOR tipos_color:a {: RESULT = new StylesGeneral(); RESULT.tieneBackgroundColor = true; RESULT.backgroundColor = a; :}
-                   | FONT_FAMILY tipos_fonts:a {: RESULT = new StylesGeneral(); RESULT.tieneFontFamily = true; RESULT.fontFamily = a; :}
-                   | TEXT_SIZE expresion_math:a {: RESULT = new StylesGeneral(); RESULT.tieneTextSize = true; RESULT.textSize = a; :}
+styles_atributo ::= COLOR DOS_PUNTOS tipos_color:a {: RESULT = new StylesGeneral(); RESULT.tieneColor = true; RESULT.color = a; :}
+                   | BACKGROUND_COLOR DOS_PUNTOS tipos_color:a {: RESULT = new StylesGeneral(); RESULT.tieneBackgroundColor = true; RESULT.backgroundColor = a; :}
+                   | FONT_FAMILY DOS_PUNTOS tipos_fonts:a {: RESULT = new StylesGeneral(); RESULT.tieneFontFamily = true; RESULT.fontFamily = a; :}
+                   | TEXT_SIZE DOS_PUNTOS expresion_math:a {: RESULT = new StylesGeneral(); RESULT.tieneTextSize = true; RESULT.textSize = a; :}
+                   | BORDER DOS_PUNTOS LPAREN expresion_math:a COMA tipos_linea:b COMA tipos_color:c RPAREN {: RESULT = new StylesGeneral(); RESULT.tieneBorder = true; RESULT.border = new BorderStyles(a, b, c); :}
                    ;
 
+/* -------------------------------------------------------------------------- FONTS ---------------------------------------------------------------- */
 tipos_fonts ::= MONO :a {: RESULT = new Native(a, new Type(TypeData.FONT), aleft, aright); :}
               | SANS_SERIF:a {: RESULT = new Native(a, new Type(TypeData.FONT), aleft, aright); :}
               | CURSIVE:a {: RESULT = new Native(a, new Type(TypeData.FONT), aleft, aright); :}
               ;
 
+/* ------------------------------------------------------------------------- LINES ------------------------------------------------------- */
 tipos_linea ::= LINE:a {: RESULT = new Native(a, new Type(TypeData.LINES), aleft, aright); :}
               | DOTTED:a {: RESULT = new Native(a, new Type(TypeData.LINES), aleft, aright); :}
               | DOUBLE:a {: RESULT = new Native(a, new Type(TypeData.LINES), aleft, aright); :}

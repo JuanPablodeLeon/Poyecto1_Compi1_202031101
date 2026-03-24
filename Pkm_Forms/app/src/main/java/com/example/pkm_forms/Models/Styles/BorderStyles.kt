@@ -1,9 +1,11 @@
 package com.example.pkm_forms.Models.Styles
 
+import com.example.pkm_forms.Patron.Instruction
+
 data class BorderStyles(
-    val grosor: Number,
-    val tipo: String,
-    val color: String
+    val grosor: Instruction,
+    val tipo: Instruction,
+    val color: Instruction
 ){
     override fun toString(): String {
         return "($grosor, $tipo, $color)"

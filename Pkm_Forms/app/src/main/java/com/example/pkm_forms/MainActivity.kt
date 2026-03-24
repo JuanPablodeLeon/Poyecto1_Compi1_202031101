@@ -1,10 +1,17 @@
 package com.example.pkm_forms
 
+import android.content.Intent
 import android.os.Bundle
+import android.provider.DocumentsContract
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,6 +47,8 @@ import com.example.pkm_forms.Models.TableSymbol
 import com.example.pkm_forms.Models.Tree
 import com.example.pkm_forms.Patron.Instruction
 import com.example.pkm_forms.ui.theme.Pkm_FormsTheme
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.io.StringReader
 import java.util.LinkedList
 
@@ -49,7 +59,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             Pkm_FormsTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    CompiLogicoApp(
+                    CompiLogico(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -58,16 +68,75 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
-fun CompiLogicoApp(modifier: Modifier = Modifier) {
-
-    var inputText by remember { mutableStateOf("MOSTRAR \"12 > 22\" " +
-            "\n number a = 12 + 8" +
-            "\n number b = 2 + 5" +
-            "\n MOSTRAR a  + b") }
+fun CompiLogico(modifier: Modifier = Modifier) {
+    var inputText by remember { mutableStateOf(
+        "MOSTRAR \"12 > 22\" \n number a = 12 + 8\n number b = 2 + 5\n MOSTRAR a  + b"
+    ) }
     var consoleText by remember { mutableStateOf("Consola lista...\n") }
+
+    val context = LocalContext.current
+
+    fun getFileNameFromUri(uri: android.net.Uri): String? {
+        var fileName: String? = null
+        val cursor = context.contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    fileName = it.getString(nameIndex)
+                }
+            }
+        }
+        if (fileName.isNullOrEmpty()) {
+            fileName = uri.lastPathSegment
+        }
+        return fileName
+    }
+
+    val openFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val uri = result.data?.data
+            if (uri != null) {
+                try {
+                    val fileName = getFileNameFromUri(uri)
+                    if (fileName == null || !fileName.endsWith(".forms", ignoreCase = true)) {
+                        Toast.makeText(context, "Por favor selecciona un archivo con extensión .forms", Toast.LENGTH_LONG).show()
+                        return@rememberLauncherForActivityResult
+                    }
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        val reader = BufferedReader(InputStreamReader(inputStream))
+                        val content = reader.readText()
+                        inputText = content
+                        Toast.makeText(context, "Archivo cargado", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Error al leer archivo", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    val saveFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val uri = result.data?.data
+            if (uri != null) {
+                try {
+                    context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                        outputStream.write(inputText.toByteArray())
+                        Toast.makeText(context, "Archivo guardado", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Error al guardar archivo", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -75,10 +144,8 @@ fun CompiLogicoApp(modifier: Modifier = Modifier) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        // 🔹 titulo
         Text(
-            text = "CompiLogico",
+            text = "Pkm Forms",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
@@ -86,30 +153,55 @@ fun CompiLogicoApp(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🟢 run
-        Button(
-            // aca se corre el codigo
-            onClick = {
-                consoleText = "===== EJECUCIÓN =====\n"
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Botón Cargar
+            Button(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "*/*"
+                    }
+                    openFileLauncher.launch(intent)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Cargar", fontSize = 14.sp)
+            }
 
-                try {
-                    val lexer = FormsLexer(StringReader(inputText))
-                    val parser = ParserForms(lexer)
-                    val result: Symbol? = null
+            // Botón Ejecutar
+            Button(
+                onClick = {
+                    consoleText = "===== EJECUCIÓN =====\n"
+
                     try {
-                        val result = parser.parse()
-                        val ast = Tree(result.value as LinkedList<Instruction>)
-                        val table = TableSymbol();
-                        consoleText = "TERMINAL\n"
+                        val lexer = FormsLexer(StringReader(inputText))
+                        val parser = ParserForms(lexer)
+                        var result: java_cup.runtime.Symbol? = null
+                        //para evitar el error generico y usar los sintacticos y lexicos
+                        try {
+                            result = parser.parse()
+                        } catch (e : Exception){
 
+                        }
+                        //Verifica si el valor no es nulo y si ambas listas de errores se encuentran vacias
                         if (result != null && lexer.listaErrorLexico.isEmpty() && parser.listErrorSintactico.isEmpty()){
+                            //crea arbol ast a base lo leido por parser
+                            val ast = Tree(result.value as LinkedList<Instruction>)
+                            val table = TableSymbol() //tabla de simbolos
 
-                            consoleText += "--------- TEXTO SIN ERRORES -----------"
-                            for(instruction in ast.instructions) {
-                                instruction.interprete(ast, table);
+                            //itera todos los elementos del arbol para poder interpretarlos
+                            for (instruction in ast.instructions) {
+                                instruction.interprete(ast, table)
                             }
 
+                            consoleText += "TERMINAL\n"
                             consoleText += ast.console
+
                         }
 
                         if(lexer.listaErrorLexico.isNotEmpty()){ //en caso de existir errores lexicos se mostraran
@@ -118,38 +210,47 @@ fun CompiLogicoApp(modifier: Modifier = Modifier) {
                                 consoleText += "${error.mensaje} en :  línea ${error.linea} | columna ${error.columna} \n"
                             }
                         }
-                        //verificar porque no muestra errores sintacticos
+
                         if(parser.listErrorSintactico.isNotEmpty()){ //en caso de existir errores sintacticos se mostraran
                             consoleText += "\n---- ERROR SINTACTICO ----\n"
                             for(error in parser.listErrorSintactico){
                                 consoleText += "${error.mensaje} en :  línea ${error.linea} | columna ${error.columna} \n"
                             }
                         }
-                    }catch (e: Exception){
 
+                    } catch (e: Exception) {
+                        if (e.message != null && !e.message!!.contains("Couldn't repair")){
+                            consoleText += "\n ---- ERROR ---- \n" + e.message
+                        }
                     }
-
-                } catch (e: Exception) {
-                    if (e.message != null && !e.message!!.contains("Couldn't repair")){
-                        consoleText += "\n ---- ERROR ---- \n" + e.message
-                    }
-                }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Ejecutar", fontSize = 12.sp)
             }
-            ,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF4CAF50)
-            ),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Text("Run", fontSize = 18.sp)
+
+            // Botón Guardar
+            Button(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "*/*"   // Para evitar que el sistema añada .txt automáticamente
+                        putExtra(Intent.EXTRA_TITLE, "codigo.forms")   // Nombre sugerido con extensión .forms
+                    }
+                    saveFileLauncher.launch(intent)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Guardar", fontSize = 12.sp)
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // 📝 area de texto principal
         OutlinedTextField(
             value = inputText,
             onValueChange = { inputText = it },
@@ -157,23 +258,22 @@ fun CompiLogicoApp(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            shape = RoundedCornerShape(16.dp)
+            shape = MaterialTheme.shapes.medium
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
-        // 💻 consola
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.6f),
-            shape = RoundedCornerShape(16.dp),
+            shape = MaterialTheme.shapes.medium,
             color = Color(0xFF1E1E1E),
             shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier
-                    .padding(12.dp)
+                    .padding(16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(

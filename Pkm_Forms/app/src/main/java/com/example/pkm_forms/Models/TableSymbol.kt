@@ -1,10 +1,15 @@
 package com.example.pkm_forms.Models
 
+import java.util.LinkedList
+
 class TableSymbol(
     var tablaPrevia: TableSymbol ?= null
 ) {
     //uso de hash para facilidad al encontrar un identificador
     private val tablaActual: MutableMap<String, Symbol> = HashMap()
+    companion object{
+        var tablaSimbolos: HashMap<String, Symbol> = HashMap()
+    }
     var nombre: String = ""
 
     fun setVariable(symbol: Symbol): Boolean{
@@ -36,5 +41,13 @@ class TableSymbol(
             return true
         }
         return tablaPrevia?.updateVariable(id, newValue) ?: false
+    }
+
+    fun obtenerListaSimbolos():LinkedList<Symbol> {
+        val list= LinkedList<Symbol>()
+        for (values in tablaSimbolos.values){
+            list.add(values)
+        }
+        return list
     }
 }
