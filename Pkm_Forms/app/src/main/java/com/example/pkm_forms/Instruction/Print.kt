@@ -1,5 +1,6 @@
 package com.example.pkm_forms.Instruction
 
+import com.example.pkm_forms.Instruction.Elementos.TextoElementos
 import com.example.pkm_forms.Models.TableSymbol
 import com.example.pkm_forms.Models.Tree
 import com.example.pkm_forms.Models.Type
@@ -20,7 +21,13 @@ class Print (
         if (value is Exception){
             return value
         }
-        tree.print(value.toString()) //agrega como String el objeto ingresado
+
+        val output = when(value){
+            is TextoElementos -> value.toString()
+            else -> value.toString()
+        }
+
+        tree.print(output) //agrega como String el objeto ingresado
         return null
     }
 }

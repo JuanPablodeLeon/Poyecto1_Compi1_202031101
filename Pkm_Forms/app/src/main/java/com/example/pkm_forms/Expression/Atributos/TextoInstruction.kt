@@ -1,6 +1,7 @@
 package com.example.pkm_forms.Expression.Atributos
 
 import com.example.pkm_forms.Instruction.Elementos.TextoAtributos
+import com.example.pkm_forms.Instruction.Elementos.TextoElementos
 import com.example.pkm_forms.Models.SintaxError
 import com.example.pkm_forms.Models.TableSymbol
 import com.example.pkm_forms.Models.Tree
@@ -25,19 +26,23 @@ class TextoInstruction(
         if (contenidoValue is Error)
             return contenidoValue
 
-        val with = if (atributos.tieneWidth){
-            val withValue = atributos.content!!.interprete(tree,table)
+        val width = if (atributos.tieneWidth && atributos.width != null){
+            val withValue = atributos.width!!.interprete(tree,table)
             if (withValue is Error) return withValue
-            withValue
+            withValue as? Number
         } else null
 
-        val height = if (atributos.tieneHeight){
-            val heightValue = atributos.content!!.interprete(tree,table)
+        val height = if (atributos.tieneHeight && atributos.height != null){
+            val heightValue = atributos.height!!.interprete(tree,table)
             if (heightValue is Error) return heightValue
-            heightValue
+            heightValue as? Number
         } else null
 
-
-        return null
+        return TextoElementos(
+            content = contenidoValue.toString(),
+            width = width,
+            height = height,
+            styles = atributos.styles
+        )
     }
 }

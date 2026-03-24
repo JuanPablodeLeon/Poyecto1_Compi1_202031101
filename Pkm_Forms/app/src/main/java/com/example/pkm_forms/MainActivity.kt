@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pkm_forms.Analizadores.Forms.FormsLexer
 import com.example.pkm_forms.Analizadores.Forms.ParserForms
+import com.example.pkm_forms.Models.Symbol
 import com.example.pkm_forms.Models.TableSymbol
 import com.example.pkm_forms.Models.Tree
 import com.example.pkm_forms.Patron.Instruction
@@ -94,20 +95,44 @@ fun CompiLogicoApp(modifier: Modifier = Modifier) {
                 try {
                     val lexer = FormsLexer(StringReader(inputText))
                     val parser = ParserForms(lexer)
-                    val result = parser.parse()
-                    val ast = Tree(result.value as LinkedList<Instruction>);
-                    val table = TableSymbol();
+                    val result: Symbol? = null
+                    try {
+                        val result = parser.parse()
+                        val ast = Tree(result.value as LinkedList<Instruction>)
+                        val table = TableSymbol();
+                        consoleText = "TERMINAL\n"
 
-                    for(instruction in ast.instructions) {
-                        instruction.interprete(ast, table);
+                        if (result != null && lexer.listaErrorLexico.isEmpty() && parser.listErrorSintactico.isEmpty()){
+
+                            consoleText += "--------- TEXTO SIN ERRORES -----------"
+                            for(instruction in ast.instructions) {
+                                instruction.interprete(ast, table);
+                            }
+
+                            consoleText += ast.console
+                        }
+
+                        if(lexer.listaErrorLexico.isNotEmpty()){ //en caso de existir errores lexicos se mostraran
+                            consoleText += "\n---- ERROR LEXICO ----\n"
+                            for(error in lexer.listaErrorLexico){
+                                consoleText += "${error.mensaje} en :  línea ${error.linea} | columna ${error.columna} \n"
+                            }
+                        }
+                        //verificar porque no muestra errores sintacticos
+                        if(parser.listErrorSintactico.isNotEmpty()){ //en caso de existir errores sintacticos se mostraran
+                            consoleText += "\n---- ERROR SINTACTICO ----\n"
+                            for(error in parser.listErrorSintactico){
+                                consoleText += "${error.mensaje} en :  línea ${error.linea} | columna ${error.columna} \n"
+                            }
+                        }
+                    }catch (e: Exception){
+
                     }
-                    consoleText = "TERMINAL\n"
-
-                    consoleText += ast.console
 
                 } catch (e: Exception) {
-                    consoleText += "\n--- ERROR SINTACTICO ---\n"
-                    consoleText += "${e.message}\n"
+                    if (e.message != null && !e.message!!.contains("Couldn't repair")){
+                        consoleText += "\n ---- ERROR ---- \n" + e.message
+                    }
                 }
             }
             ,
